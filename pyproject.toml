@@ -1,17 +1,48 @@
 [project]
 name = "sonicwave-ingestion-pipeline"
 version = "0.1.0"
-description = "Add your description here"
+description = "Idempotent Bronze/Silver ingestion pipeline for SonicWave plays and users daily snapshots"
 readme = "README.md"
 authors = [
-    { name = "Kasia", email = "kat.janeczko@gmail.com" }
+    { name = "Katarzyna", email = "kat.janeczko@gmail.com" }
 ]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "pyspark==4.0.0",
+]
 
-[project.scripts]
-sonicwave-ingestion-pipeline = "sonicwave_ingestion_pipeline:main"
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "pre-commit>=3.7",
+]
 
 [build-system]
-requires = ["uv_build>=0.11.23,<0.12.0"]
-build-backend = "uv_build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sonicwave_ingestion_pipeline"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# -ra: reason line for every non-passing test at the end
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# E/F = pycodestyle+pyflakes (the baseline), I = import sorting,
+# UP = pyupgrade (modern syntax), B = bugbear (likely bugs), SIM = simplify.
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src"]
+disallow_untyped_defs = true   # every function must be typed — the whole point
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true

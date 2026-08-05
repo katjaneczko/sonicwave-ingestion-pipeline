@@ -8,3 +8,16 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Tool caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Generated data (seed output + pipeline Bronze/Silver/reject drops)
+data/
+
+# Local Spark artifacts
+spark-warehouse/
+metastore_db/
+derby.log

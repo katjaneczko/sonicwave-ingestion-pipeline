@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Build wheel + sdist
+        run: uv build
+
+      - name: Upload dist/ as a build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonicwave-ingestion-pipeline-dist
+          path: dist/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Download the built artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sonicwave-ingestion-pipeline-dist
+          path: dist/
+
+      - name: Deploy (placeholder)
+        run: |
+          echo "Would publish the wheel in dist/ to the target environment."
+          echo "The HOW is tooling-specific; the WHAT — promote the same"
+          echo "already-built, already-tested artifact — is not."
+          ls -l dist/
