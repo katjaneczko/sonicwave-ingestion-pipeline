@@ -1,5 +1,6 @@
 from pyspark.sql import Column, DataFrame
 from pyspark.sql import functions as F
+from pyspark.sql.types import StructType
 from pyspark.sql.window import Window
 
 
@@ -19,3 +20,11 @@ def split_valid_invalid(df: DataFrame, is_valid: Column) -> tuple[DataFrame, Dat
 def write_silver(df: DataFrame, out_path: str) -> None:
     df.sparkSession.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
     df.write.mode("overwrite").partitionBy("snapshot_date").parquet(out_path)
+
+
+def cast_to_schema(df: DataFrame, schema: StructType) -> DataFrame:
+    # try_cast, not cast: under ANSI mode (the default), casting a malformed
+    # value (e.g. "NaN" to long) with a plain cast() raises and aborts the
+    # whole write. try_cast returns NULL instead, so the row survives to be
+    # caught by split_valid_invalid's validation, not lost to a crash.
+    return df.select(*[F.col(field.name).try_cast(field.dataType) for field in schema.fields])

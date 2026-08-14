@@ -1,9 +1,13 @@
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
+from pyspark.sql.types import StructType
 
 
-def read_source_permissive(spark: SparkSession, path: str) -> DataFrame:
-    return spark.read.json(path)
+def read_source_permissive(spark: SparkSession, path: str, schema: StructType) -> DataFrame:
+    # An explicit schema, not inference: a field that is NULL in every record
+    # of a given day's drop would otherwise be silently dropped from the
+    # inferred schema, making Bronze's columns inconsistent across snapshots.
+    return spark.read.schema(schema).json(path)
 
 
 def write_bronze(df: DataFrame, out_path: str, snapshot_date: str) -> None:
@@ -14,6 +18,6 @@ def write_bronze(df: DataFrame, out_path: str, snapshot_date: str) -> None:
     )
 
     # Without dynamic mode, overwrite wipes the WHOLE out_path, not just this
-    # snapshot's partition -- see test_write_bronze_partition_overwrite_is_dynamic.
+    # snapshot's partition (see test_write_bronze_partition_overwrite_is_dynamic)
     df.sparkSession.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
     bronze_df.write.mode("overwrite").partitionBy("snapshot_date").parquet(out_path)

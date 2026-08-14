@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from pyspark.sql import SparkSession
+from pyspark.sql.types import StringType, StructField, StructType
 
 from sonicwave_ingestion_pipeline.bronze import read_source_permissive, write_bronze
 
@@ -14,11 +15,39 @@ def test_read_source_permissive_reads_json(spark: SparkSession, tmp_path: Path) 
     (source_dir / "part-00000.json").write_text(
         json.dumps({"play_id": "1", "user_id": "1", "ms_played": "120000"}) + "\n"
     )
+    schema = StructType(
+        [
+            StructField("play_id", StringType()),
+            StructField("user_id", StringType()),
+            StructField("ms_played", StringType()),
+        ]
+    )
 
-    df = read_source_permissive(spark, str(source_dir))
+    df = read_source_permissive(spark, str(source_dir), schema)
 
     assert df.count() == 1
     assert df.collect()[0]["play_id"] == "1"
+
+
+def test_read_source_permissive_keeps_always_null_field(
+    spark: SparkSession, tmp_path: Path
+) -> None:
+    source_dir = tmp_path / "plays" / "2026-03-01"
+    source_dir.mkdir(parents=True)
+    (source_dir / "part-00000.json").write_text(
+        json.dumps({"play_id": "1", "updated_at": None}) + "\n"
+    )
+    schema = StructType(
+        [
+            StructField("play_id", StringType()),
+            StructField("updated_at", StringType()),
+        ]
+    )
+
+    df = read_source_permissive(spark, str(source_dir), schema)
+
+    assert "updated_at" in df.columns
+    assert df.first()["updated_at"] is None
 
 
 def test_write_bronze_adds_provenance(spark: SparkSession, tmp_path: Path) -> None:
