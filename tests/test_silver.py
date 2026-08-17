@@ -137,9 +137,6 @@ def test_cast_to_schema_raises_on_missing_column(spark: SparkSession) -> None:
 
 
 def test_cast_to_schema_returns_null_for_unparseable_value(spark: SparkSession) -> None:
-    # Regression test: under ANSI mode (the default), a plain cast() on a
-    # malformed numeric string raises and aborts the whole write. This must
-    # not crash -- it should come back as NULL so validation can quarantine it.
     df = spark.createDataFrame([("1", "NaN")], schema="play_id string, ms_played string")
     target_schema = StructType(
         [

@@ -4,9 +4,8 @@ from pyspark.sql.types import StructType
 
 
 def read_source_permissive(spark: SparkSession, path: str, schema: StructType) -> DataFrame:
-    # An explicit schema, not inference: a field that is NULL in every record
-    # of a given day's drop would otherwise be silently dropped from the
-    # inferred schema, making Bronze's columns inconsistent across snapshots.
+    # An explicit schema so no column is dropped silently because of all NULL records
+    # and Bronze columns are consistent between snapshots
     return spark.read.schema(schema).json(path)
 
 

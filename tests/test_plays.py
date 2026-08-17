@@ -20,7 +20,7 @@ def test_run_plays(spark: SparkSession, tmp_path: Path) -> None:
             "ms_played": "120000",
             "created_at": "2026-03-01T00:00:00",
         },
-        # duplicate play_id, newer created_at -> this one should win dedup
+        # duplicate play_id, newer created_at should win
         {
             "play_id": "1",
             "user_id": "1",
@@ -62,6 +62,6 @@ def test_run_plays(spark: SparkSession, tmp_path: Path) -> None:
     reject = spark.read.parquet(str(reject_path))
 
     assert silver.count() == 1
-    assert silver.first()["ms_played"] == 90000  # deduped: newer created_at won
+    assert silver.first()["ms_played"] == 90000  # deduped: newer created_at
 
     assert reject.count() == 2

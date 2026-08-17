@@ -22,9 +22,12 @@ def write_silver(df: DataFrame, out_path: str) -> None:
     df.write.mode("overwrite").partitionBy("snapshot_date").parquet(out_path)
 
 
+def write_dimension(df: DataFrame, out_path: str) -> None:
+    df.write.mode("overwrite").parquet(out_path)
+
+
 def cast_to_schema(df: DataFrame, schema: StructType) -> DataFrame:
-    # try_cast, not cast: under ANSI mode (the default), casting a malformed
-    # value (e.g. "NaN" to long) with a plain cast() raises and aborts the
-    # whole write. try_cast returns NULL instead, so the row survives to be
-    # caught by split_valid_invalid's validation, not lost to a crash.
+    # try_cast, not cast: casting a malformed value (e.g. "NaN" to long) with a plain cast()
+    # raises error and aborts the whole write
+    # try_cast returns NULL instead, so it then can be validated by split_valid_invalid
     return df.select(*[F.col(field.name).try_cast(field.dataType) for field in schema.fields])
