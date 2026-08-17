@@ -87,5 +87,5 @@ def run_users(
     )
 
     write_dimension(scd2_applied, silver_path)
-    invalid = invalid.withColumn("snapshot_date", F.lit(snapshot_date))
+    invalid = invalid.drop("effective_at").withColumn("snapshot_date", F.lit(snapshot_date))
     write_silver(invalid, reject_path)

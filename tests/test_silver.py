@@ -7,6 +7,7 @@ from pyspark.errors import AnalysisException
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import LongType, StringType, StructField, StructType
+from pyspark.testing import assertDataFrameEqual
 
 from sonicwave_ingestion_pipeline.silver import (
     cast_to_schema,
@@ -28,11 +29,14 @@ def test_deduplicate_keeps_latest_by_order_col(spark: SparkSession) -> None:
 
     result = deduplicate(df, key_cols=["play_id"], order_col="created_at")
 
-    assert result.count() == 2
-    assert "rn" not in result.columns
-
-    kept = {row["play_id"]: row["ms_played"] for row in result.collect()}
-    assert kept == {"1000": "200000", "1001": "90000"}
+    expected = spark.createDataFrame(
+        [
+            ("1000", "2026-03-01T05:00:00", "200000"),
+            ("1001", "2026-03-01T01:00:00", "90000"),
+        ],
+        schema="play_id string, created_at string, ms_played string",
+    )
+    assertDataFrameEqual(result, expected)
 
 
 def test_split_valid_invalid(spark: SparkSession) -> None:

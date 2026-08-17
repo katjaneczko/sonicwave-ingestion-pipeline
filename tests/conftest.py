@@ -26,9 +26,9 @@ def spark() -> Iterator[SparkSession]:
         .config("spark.ui.enabled", "false")
         .config("spark.driver.host", "127.0.0.1")
         .config("spark.driver.bindAddress", "127.0.0.1")
-        # Spark guesses types from partition folder names (e.g. reading snapshot_date=2026-03-01
-        # back as a DateType instead of the string)
-        # Bronze must land data exactly as it was written, untyped.
+        # Prevents Spark from guessing data types from partition folder names (e.g. reading
+        # snapshot_date=2026-03-01 back as a DateType instead of the string that
+        # was written) - Bronze must land data exactly as written.
         .config("spark.sql.sources.partitionColumnTypeInference.enabled", "false")
         .getOrCreate()
     )
